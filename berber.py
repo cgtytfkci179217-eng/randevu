@@ -244,3 +244,124 @@ randevulariKontrolEt();
 }
 setInterval(randevulariKontrolEt, 2000);
 randevulariKontrolEt();
+# 🔌 4. BÖLÜM: TÜM İNTERNET BAĞLANTI KAPILARI VE PLATFORM LOGİC
+@app.route('/')
+def ana_giris():
+    return render_template_string(KAYIT_GIRIS_SAYFASI)
+
+@app.route('/auth', methods=['POST'])
+def kimlik_dogrulama():
+    is_login = request.form.get('is_login')
+    username = request.form.get('username').strip().lower()
+    sifre = request.form.get('sifre')
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    if is_login == "0": # KAYIT OLMA MODU
+        dukkan_adi = request.form.get('dukkan_adi')
+        ustalar = request.form.get('ustalar')
+        try:
+            cursor.execute("INSERT INTO dukkanlar VALUES (?, ?, ?, ?, 9, 21, 300, 150, 400, 450, 500, 100, 80)", 
+                           (username, sifre, dukkan_adi, ustalar))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            return "<h1>❌ Bu kullanıcı adı zaten alınmış! Geri dönüp başka bir isim seçin.</h1>"
+    
+    # GİRİŞ KONTROLÜ
+    cursor.execute("SELECT * FROM dukkanlar WHERE username=? AND sifre=?", (username, sifre))
+    dukkan = cursor.fetchone()
+    conn.close()
+    
+    if dukkan:
+        # Esnaf paneline yönlendir ve dükkan verilerini gönder
+        ustalar_list = dukkan[3].split(',')
+        fiyatlar = dukkan[6:]
+        return render_template_string(BERBER_PANELI, username=dukkan[0], dukkan_adi=dukkan[2], ustalar_str=dukkan[3], fiyatlar=fiyatlar)
+    else:
+        return "<h1>❌ Hatalı kullanıcı adı veya şifre! Geri dönüp tekrar deneyin.</h1>"
+
+@app.route('/salons/<username>')
+def musteri_salonu_ac(username):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM dukkanlar WHERE username=?", (username.lower(),))
+    dukkan = cursor.fetchone()
+    conn.close()
+    
+    if not dukkan:
+        return "<h1>❌ Böyle bir salon bulunamadı! Linki kontrol edin.</h1>"
+        
+    ustalar_list = dukkan[3].split(',')
+    calisma = [dukkan[4], dukkan[5]]
+    fiyatlar = dukkan[6:]
+    
+    # Dinamik saatleri dükkanın çalışma saatine göre dolduruyoruz
+    saatler = [f"{k:02d}:00" for k in range(calisma[0], calisma[1])]
+    
+    return render_template_string(MUSTERI_WEB_SITESI, username=dukkan[0], dukkan_adi=dukkan[2], ustalar=ustalar_list, saatler=saatler, calisma=calisma, fiyatlar=fiyatlar)
+
+@app.route('/save-settings', methods=['POST'])
+def save_settings():
+    username = request.form.get('username')
+    dukkan_adi = request.form.get('dukkan_adi')
+    ustalar = request.form.get('ustalar')
+    f_sac = int(request.form.get('f_sac', 300))
+    f_sakal = int(request.form.get('f_sakal', 150))
+    f_kombin = int(request.form.get('f_kombin', 400))
+    f_yikama = int(request.form.get('f_yikama', 450))
+    f_fon = int(request.form.get('f_fon', 500))
+    f_maske = int(request.form.get('f_maske', 100))
+    f_agda = int(request.form.get('f_agda', 80))
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE dukkanlar SET dukkan_adi=?, ustalar=?, fiyat_sac=?, fiyat_sakal=?, fiyat_kombin=?, fiyat_yikama=?, fiyat_fon=?, fiyat_maske=?, fiyat_agda=?
+        WHERE username=?
+    """, (dukkan_adi, ustalar, f_sac, f_sakal, f_kombin, f_yikama, f_fon, f_maske, f_agda, username))
+    
+    cursor.execute("SELECT * FROM dukkanlar WHERE username=?", (username,))
+    dukkan = cursor.fetchone()
+    conn.close()
+    
+    fiyatlar = dukkan[6:]
+    return render_template_string(BERBER_PANELI, username=dukkan[0], dukkan_adi=dukkan[2], ustalar_str=dukkan[3], fiyatlar=fiyatlar)
+
+@app.route('/api/randevular/<username>')
+def api_get_randevular(username):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, isim, tel, hizmet, usta, saat FROM randevular WHERE dukkan_user=?", (username.lower(),))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    randevu_listesi = []
+    for r in rows:
+        randevu_listesi.append({"id": r[0], "isim": r[1], "tel": r[2], "hizmet": r[3], "usta": r[4], "saat": r[5]})
+    return jsonify(randevu_listesi)
+
+@app.route('/api/randevu-ekle', methods=['POST'])
+def api_add_randevu():
+    veri = request.json
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO randevular VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                   (veri['id'], veri['dukkan_user'], veri['isim'], veri['tel'], veri['hizmet'], veri['usta'], veri['saat']))
+    conn.commit()
+    conn.close()
+    return jsonify({"mesaj": "Randevunuz kuaförün ekranına anında iletildi!"})
+
+@app.route('/api/randevu-sil/<id>', methods=['DELETE'])
+def api_delete_randevu(id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM randevular WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"mesaj": "Randevu başarıyla silindi."})
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
