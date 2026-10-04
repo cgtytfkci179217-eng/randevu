@@ -1,9 +1,0 @@
-{
-  "name": "Berber Esnaf Paneli",
-  "short_name": "Esnaf Paneli",
-  "start_url": "/panel",
-  "display": "standalone",
-  "background_color": "#2c3e50",
-  "theme_color": "#2c3e50",
-  "orientation": "portrait"
-}
