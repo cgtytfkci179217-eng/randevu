@@ -145,6 +145,14 @@ BERBER_PANELI = """
 def ana_yonlendirme():
     # Eğer tarayıcı düz linkle girerse, otomatik olarak müşteri sayfasına aktarır
     return render_template_string(MUSTERI_WEB_SITESI, dukkan=DUKKAN_ADI, hizmetler=HIZMETLER, ustalar=USTALAR, saatler=SAATLER)
+    @app.route('/manifest.json')
+def manifest():
+    return jsonify({
+        "name": "Berber Esnaf Paneli", "short_name": "Esnaf Paneli",
+        "start_url": "/panel", "display": "standalone",
+        "background_color": "#2c3e50", "theme_color": "#2c3e50", "orientation": "portrait"
+    })
+
 
 @app.route('/panel')
 def esnaf_paneli_yeni():
