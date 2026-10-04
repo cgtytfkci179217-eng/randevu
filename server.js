@@ -1,4 +1,3 @@
-javascript
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
@@ -10,22 +9,15 @@ app.use(express.urlencoded({ extended: true }));
 
 const db = new sqlite3.Database(DB_FILE, (err) => {
     if (!err) {
-        db.run(`CREATE TABLE IF NOT EXISTS dukkanlar (
-            username TEXT PRIMARY KEY, sifre TEXT, dukkan_adi TEXT, ustalar TEXT,
-            f_sac INTEGER, f_sakal INTEGER, f_kombin INTEGER, f_yikama INTEGER, f_fon INTEGER, f_maske INTEGER, f_agda INTEGER
-        )`);
-        db.run(`CREATE TABLE IF NOT EXISTS randevular (
-            id TEXT PRIMARY KEY, dukkan_user TEXT, isim TEXT, tel TEXT, hizmet TEXT, usta TEXT, saat TEXT
-        )`);
+        db.run(`CREATE TABLE IF NOT EXISTS dukkanlar (username TEXT PRIMARY KEY, sifre TEXT, dukkan_adi TEXT, ustalar TEXT, f_sac INTEGER, f_sakal INTEGER, f_kombin INTEGER, f_yikama INTEGER, f_fon INTEGER, f_maske INTEGER, f_agda INTEGER)`);
+        db.run(`CREATE TABLE IF NOT EXISTS randevular (id TEXT PRIMARY KEY, dukkan_user TEXT, isim TEXT, tel TEXT, hizmet TEXT, usta TEXT, saat TEXT)`);
     }
 });
 
 const KAYIT_GIRIS_SAYFASI = `<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuaför Randevu Paneli</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kuaför Randevu Paneli</title>
     <style>
         body { font-family: sans-serif; background: #2c3e50; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: white; }
         .box { width: 100%; max-width: 400px; background: #34495e; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; }
@@ -39,10 +31,7 @@ const KAYIT_GIRIS_SAYFASI = `<!DOCTYPE html>
     <div class="box">
         <h2>💈 Kuaför Randevu Platformu</h2>
         <p style="font-size:12px; color:#bdc3c7; margin-bottom:20px;">Dükkanınızı kaydedin ve canlı panelinizi oluşturun.</p>
-        <div>
-            <button class="tab-btn active-tab" id="btnGiris" onclick="sec(true)">Giriş Yap</button>
-            <button class="tab-btn" id="btnKayit" onclick="sec(false)">Kayıt Ol</button>
-        </div>
+        <div><button class="tab-btn active-tab" id="btnGiris" onclick="sec(true)">Giriş Yap</button><button class="tab-btn" id="btnKayit" onclick="sec(false)">Kayıt Ol</button></div>
         <form id="anaForm" method="POST" action="/auth">
             <input type="hidden" name="is_login" id="is_login" value="1">
             <input type="text" name="username" placeholder="Kullanıcı Adı (İngilizce Harfler)" required autocomplete="off">
@@ -62,8 +51,7 @@ const KAYIT_GIRIS_SAYFASI = `<!DOCTYPE html>
             document.getElementById('kayitAlanlari').style.display = login ? "none" : "block";
             document.getElementById('formButon').innerText = login ? "Hesabıma Giriş Yap" : "Yeni Dükkan Kayıt Oluştur";
             document.getElementById('formButon').style.background = login ? "#2ecc71" : "#e67e22";
-            document.getElementById('i_dukkan').required = !login;
-            document.getElementById('i_usta').required = !login;
+            document.getElementById('i_dukkan').required = !login; document.getElementById('i_usta').required = !login;
         }
     </script>
 </body>
@@ -104,8 +92,7 @@ function girişKontrol(user, sifre, res) {
                         🔗 Müşteri Randevu Linkiniz:<br>
                         <a href="/salons/\${row.username}" target="_blank" style="color:white; word-break:break-all;">Müşteri Sayfasını Açmak İçin Tıklayın</a>
                     </div>
-                    <h2>⚙️ Gelen Randevular (\${row.dukkan_adi})</h2>
-                    <div id="liste">Yükleniyor...</div>
+                    <h2>⚙️ Gelen Randevular (\${row.dukkan_adi})</h2><div id="liste">Yükleniyor...</div>
                 </div>
                 <div class="panel">
                     <h2>🛠️ Dükkan ve Fiyat Ayarları</h2>
@@ -128,48 +115,34 @@ function girişKontrol(user, sifre, res) {
                     let sonSayi = 0;
                     function sesCal() {
                         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        let oscillator = audioCtx.createOscillator();
-                        oscillator.connect(audioCtx.destination);
+                        let oscillator = audioCtx.createOscillator(); oscillator.connect(audioCtx.destination);
                         oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
                         oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
                     }
                     async function kontrol() {
-                        let res = await fetch('/api/randevular/\${row.username}');
-                        let data = await res.json();
+                        let res = await fetch('/api/randevular/\${row.username}'); let data = await res.json();
                         if (data.length > sonSayi && sonSayi !== 0) sesCal();
-                        sonSayi = data.length;
-                        let alan = document.getElementById('liste');
+                        sonSayi = data.length; let alan = document.getElementById('liste');
                         if(data.length === 0) { alan.innerHTML = "<p>Henüz randevu yok...</p>"; return; }
                         alan.innerHTML = "";
-                        data.forEach(r => {
-                            alan.innerHTML += "<div class='r-kart'><div><b>👤 "+r.isim+"</b> ("+r.tel+")<br>✂️ "+r.hizmet+"<br>⏰ Saat: "+r.saat+" | Usta: "+r.usta+"</div><button class='sil-btn' onclick='sil(\""+r.id+"\")'>Tamamlandı</button></div>";
-                        });
+                        data.forEach(r => { alan.innerHTML += "<div class='r-kart'><div><b>👤 "+r.isim+"</b> ("+r.tel+")<br>✂️ "+r.hizmet+"<br>⏰ Saat: "+r.saat+" | Usta: "+r.usta+"</div><button class='sil-btn' onclick='sil(\""+r.id+"\")'>Tamamlandı</button></div>"; });
                     }
-                    async function sil(id) {
-                        if(confirm("Silmek istediğinize emin misiniz?")) {
-                            await fetch('/api/randevu-sil/' + id, { method: 'DELETE' });
-                            kontrol();
-                        }
-                    }
+                    async function sil(id) { if(confirm("Silmek istediğinize emin misiniz?")) { await fetch('/api/randevu-sil/' + id, { method: 'DELETE' }); kontrol(); } }
                     setInterval(kontrol, 2000); kontrol();
                 </script>
             </body>
             </html>`);
-        } else {
-            res.send("<h1>❌ Hatalı kullanıcı adı veya şifre!</h1>");
-        }
+        } else { res.send("<h1>❌ Hatalı kullanıcı adı veya şifre!</h1>"); }
     });
 }
 
 app.get('/salons/:username', (req, res) => {
-Kodu dikkatli kullanın.
-db.get("SELECT * FROM dukkanlar WHERE username=?", [req.params.username.toLowerCase()], (err, row) => {
-if (!row) return res.send("❌ Salon Bulunamadı!");
-const ustalarArr = row.ustalar.split(',');
-let ustaOptions = '';
-ustalarArr.forEach(u => { ustaOptions += <option value="\${u}">\${u}</option>; });
-res.send(`
-
+    db.get("SELECT * FROM dukkanlar WHERE username=?", [req.params.username.toLowerCase()], (err, row) => {
+        if (!row) return res.send("<h1>❌ Salon Bulunamadı!</h1>");
+        const ustalarArr = row.ustalar.split(','); let ustaOptions = '';
+        ustalarArr.forEach(u => { ustaOptions += `<option value="\${u}">\${u}</option>`; });
+        res.send(`<!DOCTYPE html>
+        <html>
 ${row.dukkan_adi}
 
 body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
@@ -182,18 +155,14 @@ button { background: #e67e22; color: white; font-weight: bold; border: none; cur
 
 💈 ${row.dukkan_adi}
 1. Hizmet Seçin
-Saç Tıraşı (${row.f_sac} TL)
-Sakal Tıraşı (${row.f_sakal} TL)
-Saç & Sakal Tıraşı (${row.f_kombin} TL)
-Saç & Sakal Tıraşı Yıkama (${row.f_yikama} TL)
+Saç Tıraşı (${row.f_sac} TL)Sakal Tıraşı (${row.f_sakal} TL)
+Saç & Sakal Tıraşı (${row.f_kombin} TL)Saç & Sakal Tıraşı Yıkama (${row.f_yikama} TL)
 Saç & Sakal Tıraşı Yıkama Fön (${row.f_fon} TL)
 1. Usta Seçin
 ${ustaOptions}
 1. Saat Seçin
 09:0010:0011:00
-12:0013:0014:00
-15:0016:0017:00
-
+13:0014:0015:00
 
 
 Randevuyu Onayla
@@ -203,8 +172,7 @@ async function gonder() {
 let veri = { id: Date.now().toString(), dukkan_user: "${row.username}", isim: document.getElementById('isim').value, tel: document.getElementById('tel').value, hizmet: document.getElementById('hizmet').value, usta: document.getElementById('usta').value, saat: document.getElementById('saat').value };
 if(!veri.isim || !veri.tel) { alert("Boş alan bırakmayın."); return; }
 await fetch('/api/randevu-ekle', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(veri) });
-alert("Randevunuz başarıyla iletildi!");
-document.getElementById('isim').value = ""; document.getElementById('tel').value = "";
+alert("Randevunuz başarıyla iletildi!"); document.getElementById('isim').value = ""; document.getElementById('tel').value = "";
 }
 
 
@@ -214,9 +182,7 @@ document.getElementById('isim').value = ""; document.getElementById('tel').value
 app.post('/save-settings', (req, res) => {
 const { username, dukkan_adi, ustalar, f_sac, f_sakal, f_kombin, f_yikama, f_fon } = req.body;
 db.run(UPDATE dukkanlar SET dukkan_adi=?, ustalar=?, f_sac=?, f_sakal=?, f_kombin=?, f_yikama=?, f_fon=? WHERE username=?,
-[dukkan_adi, ustalar, f_sac, f_sakal, f_kombin, f_yikama, f_fon, username], () => {
-girişKontrol(username, "", res);
-});
+[dukkan_adi, ustalar, f_sac, f_sakal, f_kombin, f_yikama, f_fon, username], () => { girişKontrol(username, "", res); });
 });
 app.get('/api/randevular/:username', (req, res) => {
 db.all(SELECT * FROM randevular WHERE dukkan_user=?, [req.params.username.toLowerCase()], (err, rows) => { res.json(rows || []); });
@@ -228,4 +194,75 @@ db.run(INSERT INTO randevular VALUES (?, ?, ?, ?, ?, ?, ?), [id, dukkan_user, is
 app.delete('/api/randevu-sil/:id', (req, res) => {
 db.run(DELETE FROM randevular WHERE id=?, [req.params.id], () => { res.json({ m: "1" }); });
 });
-app.listen(PORT, () => { console.log(Server active on ${PORT}); });
+app.listen(PORT, () => { console.log(Server active on ${PORT}); });                        oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
+                    }
+                    async function kontrol() {
+                        let res = await fetch('/api/randevular/\${row.username}'); let data = await res.json();
+                        if (data.length > sonSayi && sonSayi !== 0) sesCal();
+                        sonSayi = data.length; let alan = document.getElementById('liste');
+                        if(data.length === 0) { alan.innerHTML = "<p>Henüz randevu yok...</p>"; return; }
+                        alan.innerHTML = "";
+                        data.forEach(r => { alan.innerHTML += "<div class='r-kart'><div><b>👤 "+r.isim+"</b> ("+r.tel+")<br>✂️ "+r.hizmet+"<br>⏰ Saat: "+r.saat+" | Usta: "+r.usta+"</div><button class='sil-btn' onclick='sil(\""+r.id+"\")'>Tamamlandı</button></div>"; });
+                    }
+                    async function sil(id) { if(confirm("Silmek istediğinize emin misiniz?")) { await fetch('/api/randevu-sil/' + id, { method: 'DELETE' }); kontrol(); } }
+                    setInterval(kontrol, 2000); kontrol();
+                </script>
+            </body></html>`);
+        } else { res.send("<h1>❌ Hatalı kullanıcı adı veya şifre!</h1>"); }
+    });
+}
+
+app.get('/salons/:username', (req, res) => {
+    db.get("SELECT * FROM dukkanlar WHERE username=?", [req.params.username.toLowerCase()], (err, row) => {
+        if (!row) return res.send("<h1>❌ Salon Bulunamadı!</h1>");
+        let ustaOptions = ''; row.ustalar.split(',').forEach(u => { ustaOptions += `<option value="\\${u}">\\${u}</option>`; });
+        res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>\\${row.dukkan_adi}</title>
+        <style>
+            body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+            .phone { width: 100%; max-width: 360px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); padding: 15px; border: 4px solid #111; }
+            select, input, button { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+            button { background: #e67e22; color: white; font-weight: bold; border: none; cursor: pointer; }
+        </style></head><body>
+            <div class="phone">
+                <h2>💈 \\${row.dukkan_adi}</h2>
+                <label>Hizmet Seçin</label>
+                <select id="hizmet">
+                    <option value="Saç Tıraşı">Saç Tıraşı (\\${row.f_sac} TL)</option><option value="Sakal Tıraşı">Sakal Tıraşı (\\${row.f_sakal} TL)</option><option value="Saç & Sakal Tıraşı">Saç & Sakal Tıraşı (\\${row.f_kombin} TL)</option>
+                </select>
+                <label>Usta Seçin</label><select id="usta">\\${ustaOptions}</select>
+                <label>Saat Seçin</label>
+                <select id="saat"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option></select>
+                <input type="text" id="isim" placeholder="Adınız Soyadınız"><input type="tel" id="tel" placeholder="Telefon Numaranız">
+                <button onclick="gonder()">Randevuyu Onayla</button>
+            </div>
+            <script>
+                async function gonder() {
+                    let veri = { id: Date.now().toString(), dukkan_user: "\\${row.username}", isim: document.getElementById('isim').value, tel: document.getElementById('tel').value, hizmet: document.getElementById('hizmet').value, usta: document.getElementById('usta').value, saat: document.getElementById('saat').value };
+                    if(!veri.isim || !veri.tel) { alert("Boş alan bırakmayın."); return; }
+                    await fetch('/api/randevu-ekle', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(veri) });
+                    alert("Randevunuz başarıyla iletildi!"); document.getElementById('isim').value = ""; document.getElementById('tel').value = "";
+                }
+            </script>
+        </body></html>`);
+    });
+});
+
+app.post('/save-settings', (req, res) => {
+    const { username, dukkan_adi, ustalar, f_sac, f_sakal, f_kombin } = req.body;
+    db.run(\`UPDATE dukkanlar SET dukkan_adi=?, ustalar=?, f_sac=?, f_sakal=?, f_kombin=? WHERE username=?\`, [dukkan_adi, ustalar, f_sac, f_sakal, f_kombin, username], () => { dükkanKontrol(username, "", res); });
+});
+
+app.get('/api/randevular/:username', (req, res) => {
+    db.all(\`SELECT * FROM randevular WHERE dukkan_user=?\`, [req.params.username.toLowerCase()], (err, rows) => { res.json(rows || []); });
+});
+
+app.post('/api/randevu-ekle', (req, res) => {
+    const { id, dukkan_user, isim, tel, hizmet, usta, saat } = req.body;
+    db.run(\`INSERT INTO randevular VALUES (?, ?, ?, ?, ?, ?, ?)\`, [id, dukkan_user, isim, tel, hizmet, usta, saat], () => { res.json({ m: "1" }); });
+});
+
+app.delete('/api/randevu-sil/:id', (req, res) => {
+    db.run(\`DELETE FROM randevular WHERE id=?\`, [req.params.id], () => { res.json({ m: "1" }); });
+});
+
+app.listen(PORT, () => { console.log(\`Active on \${PORT}\`); });
