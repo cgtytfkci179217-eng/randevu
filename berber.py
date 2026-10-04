@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-DUKKAN_ADI = "Makas & Tarz Sarayı"
+DUKKAN_ADI = "DUKKAN_ADI = "Kuaför & Güzellik Sarayı"
 USTALAR = ["Ahmet Usta", "Mehmet Usta", "Salih Usta"]
 SAATLER = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
 HIZMETLER = [
