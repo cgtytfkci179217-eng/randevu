@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, render_template_string, redirect
+from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
@@ -140,24 +140,21 @@ BERBER_PANELI = """
 </html>
 """
 
-# HATA ÖNLEYİCİ YENİ YÖNLENDİRME KAPILARI
 @app.route('/')
 def ana_yonlendirme():
-    # Eğer tarayıcı düz linkle girerse, otomatik olarak müşteri sayfasına aktarır
     return render_template_string(MUSTERI_WEB_SITESI, dukkan=DUKKAN_ADI, hizmetler=HIZMETLER, ustalar=USTALAR, saatler=SAATLER)
-    @app.route('/manifest.json')
+
+@app.route('/panel')
+def esnaf_paneli_yeni():
+    return render_template_string(BERBER_PANELI)
+
+@app.route('/manifest.json')
 def manifest():
     return jsonify({
         "name": "Berber Esnaf Paneli", "short_name": "Esnaf Paneli",
         "start_url": "/panel", "display": "standalone",
         "background_color": "#2c3e50", "theme_color": "#2c3e50", "orientation": "portrait"
     })
-
-
-@app.route('/panel')
-def esnaf_paneli_yeni():
-    # Adres hatasını önlemek için esnaf panelinin adını /panel olarak sadeleştirdik
-    return render_template_string(BERBER_PANELI)
 
 @app.route('/api/randevular')
 def get_randevular():
