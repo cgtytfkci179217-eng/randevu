@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, redirect
 
 app = Flask(__name__)
 
@@ -54,6 +54,7 @@ MUSTERI_WEB_SITESI = """
     <script>
         async function randevuGonder() {
             let veri = {
+                id: Date.now(),
                 isim: document.getElementById('isim').value,
                 tel: document.getElementById('tel').value,
                 hizmet: document.getElementById('hizmet').value,
@@ -85,7 +86,8 @@ BERBER_PANELI = """
     <style>
         body { font-family: sans-serif; background: #2c3e50; padding: 20px; color: white; display: flex; justify-content: center; }
         .panel { width: 500px; background: #34495e; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .r-kart { background: #fff; color: #333; padding: 10px; margin-bottom: 8px; border-left: 5px solid #2ecc71; border-radius: 4px; }
+        .r-kart { background: #fff; color: #333; padding: 12px; margin-bottom: 8px; border-left: 5px solid #2ecc71; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .sil-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -113,7 +115,23 @@ BERBER_PANELI = """
             let listeAlan = document.getElementById('liste');
             if(data.length === 0) { listeAlan.innerHTML = "<p style='color:#ccc;'>Henüz gelen randevu yok...</p>"; return; }
             listeAlan.innerHTML = "";
-            data.forEach(r => { listeAlan.innerHTML += `<div class='r-kart'><b>👤 ${r.isim}</b> (${r.tel})<br>✂️ ${r.hizmet}<br>⏰ Saat: ${r.saat} | Usta: ${r.usta}</div>`; });
+            data.forEach(r => { 
+                listeAlan.innerHTML += `
+                    <div class='r-kart'>
+                        <div>
+                            <b>👤 ${r.isim}</b> (${r.tel})<br>
+                            ✂️ ${r.hizmet}<br>
+                            ⏰ Saat: ${r.saat} | Usta: ${r.usta}
+                        </div>
+                        <button class="sil-btn" onclick="randevuSil(${r.id})">Tamamlandı / İptal</button>
+                    </div>`; 
+            });
+        }
+        async function randevuSil(id) {
+            if(confirm("Bu randevuyu silmek istediğinize emin misiniz?")) {
+                await fetch('/api/randevu-sil/' + id, { method: 'DELETE' });
+                randevulariKontrolEt();
+            }
         }
         setInterval(randevulariKontrolEt, 2000);
         randevulariKontrolEt();
@@ -122,12 +140,15 @@ BERBER_PANELI = """
 </html>
 """
 
+# HATA ÖNLEYİCİ YENİ YÖNLENDİRME KAPILARI
 @app.route('/')
-def musteri_sayfasi():
+def ana_yonlendirme():
+    # Eğer tarayıcı düz linkle girerse, otomatik olarak müşteri sayfasına aktarır
     return render_template_string(MUSTERI_WEB_SITESI, dukkan=DUKKAN_ADI, hizmetler=HIZMETLER, ustalar=USTALAR, saatler=SAATLER)
 
-@app.route('/berber')
-def berber_sayfasi():
+@app.route('/panel')
+def esnaf_paneli_yeni():
+    # Adres hatasını önlemek için esnaf panelinin adını /panel olarak sadeleştirdik
     return render_template_string(BERBER_PANELI)
 
 @app.route('/api/randevular')
@@ -140,5 +161,12 @@ def add_randevu():
     randevular.append(veri)
     return jsonify({"mesaj": "Randevunuz başarıyla berbere iletildi!"})
 
+@app.route('/api/randevu-sil/<int:randevu_id>', methods=['DELETE'])
+def delete_randevu(randevu_id):
+    global randevular
+    randevular = [r for r in randevular if r['id'] != randevu_id]
+    return jsonify({"mesaj": "Randevu başarıyla silindi."})
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
