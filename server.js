@@ -1,3 +1,4 @@
+javascript
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
@@ -84,7 +85,7 @@ app.post('/auth', (req, res) => {
 });
 
 function girişKontrol(user, sifre, res) {
-    db.get(`SELECT * FROM dukkanlar WHERE username=? AND sifre=?`, [user, sifre], (err, row) => {
+    db.get("SELECT * FROM dukkanlar WHERE username=? AND sifre=?", [user, sifre], (err, row) => {
         if (row) {
             res.send(`<!DOCTYPE html>
             <html>
@@ -161,7 +162,8 @@ function girişKontrol(user, sifre, res) {
 }
 
 app.get('/salons/:username', (req, res) => {
-db.get(SELECT * FROM dukkanlar WHERE username=?, [req.params.username.toLowerCase()], (err, row) => {
+Kodu dikkatli kullanın.
+db.get("SELECT * FROM dukkanlar WHERE username=?", [req.params.username.toLowerCase()], (err, row) => {
 if (!row) return res.send("❌ Salon Bulunamadı!");
 const ustalarArr = row.ustalar.split(',');
 let ustaOptions = '';
